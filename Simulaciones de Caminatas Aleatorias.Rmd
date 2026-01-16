@@ -1,0 +1,96 @@
+---
+title: "Simulacion de las caminatas aleatorias"
+author: "Juan Manuel Gutierrez Hernandez"
+date: "2026-01-16"
+output: html_document
+---
+```{r}
+# Función para simular Mn(t)
+# n: factor de escalamiento (pasos por unidad de tiempo)
+# T_max: tiempo máximo hasta donde simular
+simular_caminata <- function(n, T_max = 1) {
+  
+  # 1. Definir el número total de pasos (floor(n * t))
+  # Como queremos simular hasta T_max, necesitamos n * T_max pasos
+  num_pasos <- floor(n * T_max)
+  
+  # 2. Generar las variables aleatorias Xi
+  # Asumimos Xi toma valores -1 o 1 con probabilidad 0.5 (Caminata Simétrica)
+  X <- sample(c(-1, 1), num_pasos, replace = TRUE)
+  
+  # 3. Calcular la suma acumulada (Sumatoria de Xi)
+  # Agregamos un 0 al inicio para representar t=0
+  S <- c(0, cumsum(X))
+  
+  # 4. Generar el vector de tiempo
+  # Los saltos ocurren cada 1/n
+  t <- (0:num_pasos) / n
+  
+  # 5. Calcular Mn(t) aplicando el factor de escala 1/sqrt(n)
+  Mn <- (1 / sqrt(n)) * S
+  
+  # Devolvemos un data frame para facilitar el manejo
+  return(data.frame(tiempo = t, valor = Mn))
+}
+
+# --- EJECUCIÓN Y GRÁFICA ---
+
+# Parámetros
+T_fin <- 1    # Simular hasta t=1
+n_sim <- 10000 # Un n grande para que se parezca al Movimiento Browniano
+
+# Generar datos
+datos <- simular_caminata(n = n_sim, T_max = T_fin)
+
+# Graficar
+plot(datos$tiempo, datos$valor, type = "l", col = "blue", lwd = 1.5,
+     main = paste("Simulación de Mn(t) con n =", n_sim),
+     xlab = "Tiempo (t)", ylab = "Mn(t)",
+     sub = "Convergencia a Movimiento Browniano")
+
+# Agregar una línea en el 0 para referencia
+abline(h = 0, col = "gray", lty = 2)
+```
+
+```{r}
+simular_caminata_simple <- function(n_pasos = 50) {
+  # 1. Definir los saltos (Xi)
+  # Probabilidad 0.5 para -1 y 0.5 para 1
+  X <- sample(c(-1, 1), n_pasos, replace = TRUE)
+  
+  # 2. Calcular la trayectoria (Mn)
+  # Iniciamos en M0 = 0 (usamos c(0, ...) para agregar el punto de partida)
+  M <- c(0, cumsum(X))
+  
+  # 3. Vector de tiempo (0, 1, 2, ..., n)
+  t <- 0:n_pasos
+  
+  # Devolver datos para graficar
+  return(data.frame(tiempo = t, valor = M))
+}
+
+# --- EJECUCIÓN ---
+
+# Parámetros
+N <- 20 # Número de pasos (puedes cambiarlo a 100, 1000, etc.)
+
+# Generar una caminata
+caminata <- simular_caminata_simple(N)
+
+# --- GRAFICAR ---
+# Usamos type = "s" (steps/escalones) para visualizar mejor la naturaleza discreta
+plot(caminata$tiempo, caminata$valor, type = "s", 
+     col = "darkblue", lwd = 2,
+     main = "Caminata Aleatoria Simple Simétrica (Mn)",
+     xlab = "Número de pasos (n)", ylab = "Posición (Mn)",
+     xaxt = "n") # Quitamos eje X automático para poner enteros
+
+# Ajustes visuales para que se vea como tu cuaderno
+axis(1, at = 0:N) # Eje X con todos los pasos
+grid(nx = N, ny = NULL) # Cuadrícula vertical
+abline(h = 0, col = "red", lwd = 1) # Línea base en 0
+
+# Marcar los puntos (nodos del árbol)
+points(caminata$tiempo, caminata$valor, pch = 16, col = "black")
+```
+
